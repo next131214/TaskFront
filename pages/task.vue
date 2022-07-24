@@ -13,4 +13,5 @@ export default Vue.extend({
   name: "TaskPage",
   components: { TableView },
 });
+
 </script>

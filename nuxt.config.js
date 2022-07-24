@@ -47,5 +47,22 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+  },
+  modules: [
+    '@nuxtjs/axios',
+  ],
+  axios: {
+    proxy: true,
+    baseURL: 'http://localhost:80',
+  },
+  proxy: {
+    '/api1/': {
+      target: 'http://localhost:80',
+      pathRewrite: {'^/api1/': '/'}
+    },
+    '/zipApi/': {
+      target: 'https://zipcloud.ibsnet.co.jp',
+      pathRewrite: { '^/zipApi/': '' },
+    }
   }
 }
