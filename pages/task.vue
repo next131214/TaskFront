@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container mx-auto">
     <h1>タスク一覧</h1>
     <TableView />
   </div>
