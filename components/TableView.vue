@@ -3,7 +3,7 @@
     <table class="table-fixed border-collapse border-2 border-gray-500">
       <thead>
         <tr>
-          <th class="w-1/2 px-4 py-2">更新</th>
+          <th class="w-1/2 px-4 py-2">操作</th>
           <th class="w-1/4 px-4 py-2">内容</th>
           <th class="w-1/4 px-4 py-2">実行/未実行</th>
         </tr>
@@ -15,7 +15,19 @@
               @click="ShowUpdateModal(column.id)"
               class="bg-blue-400 hover:bg-blue-300 text-white rounded px-4 py-2"
             >
-              更新
+              変更
+            </button>
+            <button
+              @click="ShowConfirm(column.id, 'delete')"
+              class="bg-red-400 hover:bg-red-300 text-white rounded px-4 py-2"
+            >
+              削除
+            </button>
+            <button
+              @click="completeTodo(column.id, 'change')"
+              class="bg-green-800 hover:bg-green-700 text-white rounded px-4 py-2"
+            >
+              実行/未実行
             </button>
           </td>
           <td class="border px-4 py-2">
@@ -35,7 +47,7 @@
     </button>
     <button
       class="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2"
-      @click="ShowUpdateModal(0)"
+      @click="ShowUpdateModal('')"
     >
       登録
     </button>
@@ -45,6 +57,7 @@
       v-on:GetTodoALL="GetTodoALL"
       :updatetodo="updatetodo"
     />
+    <Confirm v-show="confirm" @emitFromChild="deleteTodo" :message="confirmmessage" />
   </div>
 </template>
 
@@ -52,6 +65,7 @@
 import axios from "axios";
 import Vue from "vue";
 import TaskUpdate from "~/components/TaskUpdate.vue";
+import Confirm from "~/components/Confirm.vue";
 
 export type DefTodo = {
   name: string;
@@ -60,7 +74,7 @@ export type DefTodo = {
 
 export default Vue.extend({
   name: "TableView",
-  components: { TaskUpdate },
+  components: { TaskUpdate, Confirm },
 
   data: () => ({
     DoneType: {
@@ -69,11 +83,15 @@ export default Vue.extend({
     },
     items: {},
     modalshow: false,
+    confirm: false,
     updatetodo: {
       user_id: "1",
       text: "",
       id: "",
+      done: "false",
     },
+    confirmmessage: "",
+    key: {},
   }),
   created() {
     this.GetTodoALL();
@@ -97,9 +115,8 @@ export default Vue.extend({
         this.items = res.data.data.todos;
       });
     },
-
-    ShowUpdateModal: function (id: number) {
-      if (id != 0) {
+    ShowUpdateModal: function (id: string) {
+      if (id != "") {
         let api = axios({
           url: "/api1/query",
           headers: {},
@@ -124,9 +141,90 @@ export default Vue.extend({
           user_id: "1",
           text: "",
           id: "",
+          done: "",
         };
       }
       this.modalshow = true;
+    },
+    deleteTodo: function () {
+      let api = axios({
+        url: "/api1/query",
+        headers: {},
+        method: "POST",
+        data: {
+          query:
+            `mutation deleteTodo{
+                 deleteTodo(input:{
+                          id:"` +
+            this.key +
+            `"
+                           })
+              }`,
+        },
+      }).then((res) => {
+        if (res.status == 200) {
+          this.GetTodoALL();
+          this.confirm = false;
+        } else {
+        }
+      });
+    },
+    completeTodo: function (id:string) {
+      let api0 = axios({
+        url: "/api1/query",
+        headers: {},
+        method: "POST",
+        data: {
+          query:
+            `query{
+          todo(id:"` +
+            id +
+            `"){
+            id,
+            text,
+            done
+          }
+          }`,
+        },
+      }).then((res) => {
+        let api = axios({
+          url: "/api1/query",
+          headers: {},
+          method: "POST",
+          data: {
+            query:
+              `mutation updateTodo{
+                      updateTodo(input:{
+                        text:"` +
+              res.data.data.todo.text +
+              `",
+                        userId:"` +
+              res.data.data.todo.user_id +
+              `"
+                        id:"` +
+              id +
+              `"
+                        done:` +
+              !(res.data.data.todo.done) +
+              `
+              })
+            }`,
+          },
+        }).then((res) => {
+          if (res.status == 200) {
+            this.modalshow = false;
+            this.GetTodoALL();
+          } else {
+          }
+        });
+      });
+    },
+    ShowConfirm: function (id: string, mode: string) {
+      if (mode == "delete") {
+        this.confirmmessage = "削除します。";
+      }
+      this.key = id;
+      this.confirm = true;
     },
   },
 });

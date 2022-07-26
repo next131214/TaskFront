@@ -86,38 +86,68 @@ import axios from "axios";
 
 export default Vue.extend({
   name: "ModalUpdate",
-  data: () => ({
-  }),
-  created() {
-    this.todo = this.updatetodo;
-  },
+  data: () => ({}),
+  created() {},
   props: ["updatetodo"],
   methods: {
     update: function () {
-      let api = axios({
-        url: "/api1/query",
-        headers: {},
-        method: "POST",
-        data: {
-          query:
-            `mutation createtodo{
+      if (this.updatetodo.id == "") {
+        let api = axios({
+          url: "/api1/query",
+          headers: {},
+          method: "POST",
+          data: {
+            query:
+              `mutation createtodo{
                     createTodo(input:{
                             text:"` +
-            this.updatetodo.text +
-            `",
+              this.updatetodo.text +
+              `",
                             userId:"` +
-            this.updatetodo.user_id +
-            `"
+              this.updatetodo.user_id +
+              `"
                     }) 
                 }`,
-        },
-      }).then((res) => {
-        if (res.status == 200) {
-          this.$parent.modalshow = false;
-          this.$emit("GetTodoALL");
-        } else {
-        }
-      });
+          },
+        }).then((res) => {
+          if (res.status == 200) {
+            this.$parent.modalshow = false;
+            this.$emit("GetTodoALL");
+          } else {
+          }
+        });
+      } else {
+        let api = axios({
+          url: "/api1/query",
+          headers: {},
+          method: "POST",
+          data: {
+            query:
+              `mutation updateTodo{
+                      updateTodo(input:{
+                        text:"` +
+                        this.updatetodo.text +
+                         `",
+                        userId:"` +
+                        this.updatetodo.user_id +
+                          `"
+                        id:"` +
+                        this.updatetodo.id +
+                        `"
+                        done:` +
+                        this.updatetodo.done +
+                        `
+              })
+            }`,
+          },
+        }).then((res) => {
+          if (res.status == 200) {
+            this.$parent.modalshow = false;
+            this.$emit("GetTodoALL");
+          } else {
+          }
+        });
+      }
     },
   },
 });
